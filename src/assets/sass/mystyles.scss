@@ -13,9 +13,9 @@ $modal-card-title-line-height: 3;
 $modal-card-title-size: $size-large !default
 
 $modal-card-foot-radius: $radius-large !default
-$modal-card-foot-border-top: 50px solid $border !default
+$modal-card-foot-border-top: 1px solid $border !default
 
-$modal-card-body-background-color: $red !default
+$modal-card-body-background-color: $white !default
 $modal-card-body-padding: 20px !default
 
-@import "../../../node_modules/bulma/sass/utilities/functions";
+@import "~bulma";
