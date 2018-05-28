@@ -1,0 +1,21 @@
+@import "~bulma/sass/utilities/initial-variables";
+@import "../../../node_modules/bulma/sass/utilities/functions";
+@import "../../../node_modules/bulma/sass/utilities/derived-variables";
+$modal-card-spacing: 40px !default
+
+$modal-card-head-background-color: $background !default
+$modal-card-head-border-bottom: 1px solid $border !default
+$modal-card-head-padding: 20px !default
+$modal-card-head-radius: $radius-large !default
+
+$modal-card-title-color: $text-strong !default
+$modal-card-title-line-height: 3;
+$modal-card-title-size: $size-large !default
+
+$modal-card-foot-radius: $radius-large !default
+$modal-card-foot-border-top: 50px solid $border !default
+
+$modal-card-body-background-color: $red !default
+$modal-card-body-padding: 20px !default
+
+@import "../../../node_modules/bulma/sass/utilities/functions";
