@@ -1,51 +1,88 @@
 <template>
-  <div>
+  <div id="auction">
     <div v-if="errorFlag" style="color: red">
       {{error}}
     </div>
-    <div id="imageSpace">
-      <img id=auctionImg :src="'http://localhost:4941/api/v1/auctions/' + $route.params.auctionID + '/photos'">
-    </div>
-    <div id="auctionInfo">
-      <h2>{{title}}</h2>
-      <h4>Seller Info:</h4>
-      <div>
-        <h5>Username: {{seller.username}}</h5>
-      </div>
-      <h4>Description:</h4>
-      <div>
-        <p>{{description}}</p>
-      </div>
-      <h4>Auction running info:</h4>
-      <div>
-        <h5>Start Date: {{startDate.toString()}}</h5>
-        <h5>End Date: {{endDate.toString()}}</h5>
-      </div>
-      <h4>Current bid: ${{currentBid}}</h4>
-      <h4>Bidding history:</h4>
-      <div id="history">
-        <table id="biddingTable">
-            <tr>
-              <th>Bid Amount</th>
-              <th>Bid Made</th>
-              <th>Username</th>
-            </tr>
-            <tr v-for="bid in bidHistory">
-              <td>${{bid.amount}}</td>
-              <td>{{Date(bid.datetime).toString()}}</td>
-              <td>{{bid.buyerUsername}}</td>
-            </tr>
-        </table>
+    <div class="ultWrapper">
+      <div class="columns">
+        <div class="column is-two-thirds">
+          <div class="box">
+            <article class="media">
+              <figure class="media-left">
+                <p class="image is-512x512">
+                  <img id=auctionImg
+                       :src="'http://localhost:4941/api/v1/auctions/' + $route.params.auctionID + '/photos'">
+                </p>
+              </figure>
+              <div class="media-content">
+                <p class="title is-2">
+                  {{title}}
+                </p>
+                <p class="title is-5 is-marginless">Seller info</p>
+                <p class="desc">
+                  &emsp;<strong>Username: </strong> {{seller.username}} <br/>
+                  &emsp;<strong>Details: </strong> {{description}}
+                </p>
+                <p class="title is-5 is-marginless">Auction info</p>
+                <p class="desc">
+                  &emsp;<strong>Starting date: </strong> {{startDate.toString()}}<br/>
+                  &emsp;<strong>Ending date: </strong> {{endDate.toString()}}<br/>
+                  &emsp;<strong>Current bid: </strong> ${{currentBid}}<br/>
+                  &emsp;<strong>Reserve price: </strong> ${{reservePrice}}<br/>
+                  &emsp;<strong>Starting bid: </strong> ${{startingBid}}<br/>
+                </p>
+                <p class="title is-5">Bidding History</p>
+                <div class="table-container">
+                  <table class="table is-bordered">
+                    <thead>
+                    <tr>
+                      <th>Bid Amount</th>
+                      <th>Date</th>
+                      <th>Username</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="bid in bidHistory">
+                      <td>${{(Math.round(bid.amount / 100)).toFixed(2)}}</td>
+                      <td>{{Date(bid.datetime).toString()}}</td>
+                      <td>{{bid.buyerUsername}}</td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div class="column" id="biddingArea" v-if="user.authenticated">
+          <div class="box">
+            <article>
+              <p class="title is-5">Make a bid!</p>
+              <div class="field">
+                <p class="control has-icons-left">
+                  <input class="input" type="number" placeholder="Enter bid amount" v-model="userBid">
+                  <span class="icon is-small is-left">
+                    <i class="fas fa-dollar-sign"></i>
+                  </span>
+                </p>
+              </div>
+              <a class="button is-dark" @click="placeBid">Bid</a>
+            </article>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+  import auth from "../auth";
+
   export default {
     name: "auction",
     data() {
       return {
+        user: auth.user,
         error: "",
         errorFlag: false,
         title: "",
@@ -54,7 +91,10 @@
         endDate: 0,
         description: "",
         currentBid: 0,
-        bidHistory: []
+        reservePrice: 0,
+        startingBid: 0,
+        bidHistory: [],
+        userBid: 0
       }
     },
     mounted: function () {
@@ -69,7 +109,9 @@
             this.startDate = new Date(response.data.startDateTime);
             this.endDate = new Date(response.data.endDateTime);
             this.description = response.data.description;
-            this.currentBid = response.data.currentBid;
+            this.currentBid = (Math.round(parseFloat(response.data.currentBid) / 100)).toFixed(2);
+            this.reservePrice = (Math.round(parseFloat(response.data.reservePrice) / 100)).toFixed(2);
+            this.startingBid = (Math.round(parseFloat(response.data.startingBid) / 100)).toFixed(2)
             this.bidHistory = response.data.bids;
             this.sortBids();
           }, (error) => {
@@ -80,8 +122,8 @@
       sortBids: function () {
         console.log("sorting");
 
-        function compare(a,b) {
-          if(a.datetime < b.datetime) {
+        function compare(a, b) {
+          if (a.datetime < b.datetime) {
             return 1;
           }
           if (a.datetime > b.datetime) {
@@ -89,67 +131,60 @@
           }
           return 0;
         }
+
         this.bidHistory.sort(compare)
+      },
+      bidValidator: function () {
+        let valid = false;
+        if ((this.userBid >= this.currentBid + 5 && this.userBid >= this.startingBid)) {
+          valid = true;
+        }
+        return valid;
+      },
+      placeBid: function () {
+        if (this.bidValidator()) {
+          let token = localStorage.getItem("user_token");
+          this.$http.post("http://localhost:4941/api/v1/auctions/" + this.$route.params.auctionID +
+            "/bids/?amount=" + (Math.round(this.userBid * 100)).toFixed(2), {}, {
+            headers:
+              {'x-authorization': token}
+          })
+            .then((response) => {
+              console.log("bid sent" + response.status);
+              this.getAuction();
+              alert("Successfully placed bid");
+            }, (error) => {
+              console.log("Bid denied " + error.data);
+              alert("Something went wrong, could not place bid: " + error.data)
+            })
+        } else {
+          alert("Bids must be at least $5 higher than the last bid and need to at least meet the starting bid")
+        }
       }
     }
   }
 </script>
 
 <style>
-  #imageSpace{
-    max-width: 50em;
-    height: 55em;
-    float: left;
-    margin: 1em;
+  #auction {
+    background-color: lightgrey;
   }
 
-  #auctionInfo{
-    max-width: 50em;
-    height: 55em;
-    float: left;
-    margin: 1em;
+  .desc {
+    margin-bottom: 1em;
   }
 
-  #auctionInfo h2{
-    text-align: center;
-    text-underline: black;
-    border-bottom: black 2px solid;
-    display:  inline-block;
+  .table-container {
+    overflow-y: scroll;
+    max-height: 15em;
   }
 
-  #auctionImg {
-    max-width: 40em;
-    max-height: 40em;
-    margin: 3em;
-    border: solid 1px lightgrey;
+  #biddingArea {
+    margin-right: 1em;
   }
 
-  #history{
-    max-height: 10em;
-    min-height: 10em;
-    display: block;
+  .ultWrapper {
+    margin-top: 1em;
   }
 
-  #biddingTable{
-    height: 10em;
-    width: 100%;
-    display: block;
-    border-collapse: collapse;
-  }
-
-  #biddingTable tbody, thead {
-    overflow-y: auto;
-    overflow-x: hidden;
-    display: block;
-  }
-
-  #biddingTable td, th{
-    padding: 8px;
-    border: 1px solid #dddddd;
-    text-align: left;
-  }
-
-  #biddingTable tr:nth-child(even) {
-    background-color: lightblue;
-  }
 </style>

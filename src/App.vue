@@ -81,6 +81,9 @@
 </script>
 
 <style scoped>
+  #app {
+    background-color: lightgrey;
+  }
   #heading {
     background-size: cover;
     background: url("./assets/money.jpg") repeat center;

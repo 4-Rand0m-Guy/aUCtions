@@ -5,58 +5,86 @@
     </div>
     <div>
       <div>
-        <div class="field" id="narrowing">
+        <div class="field is-grouped" id="narrowing">
           <button class="button" v-on:click="addStatusParam('')">All Auctions</button>
           <button class="button" v-on:click="addStatusParam('active')">Active Auctions</button>
           <button class="button" v-on:click="addStatusParam('expired') ">Expired Auctions</button>
+          <label class="label">Select category:</label>
+          <div class="select">
+            <label>
+              <select v-model="picked">
+                <option value="all">All</option>
+                <option v-for="category in categories" :value="category.categoryId">{{category.categoryTitle}}</option>
+              </select>
+            </label>
+          </div>
+          <button class="applyBtn" v-on:click="addCategoryParam">Apply</button>
           <form action="" class="search">
             <label>
               <input type="text" placeholder="search" v-model="searchQuery"/>
             </label>
           </form>
-          <button class="applyBtn" v-on:click="searchAuctions">Apply</button>
+          <button class="applyBtn" v-on:click="searchAuctions">Search</button>
+
         </div>
-        <div id="table">
-          <h3 class="title is-1">Showing {{status}} auctions</h3>
-          <table id="auctionList">
-            <tr v-for="auction in this.displayed.slice(this.index, this.index + this.numResults)">
-              <td><img class="auctionImage" :src="'http://localhost:4941/api/v1/auctions/' + auction.id + '/photos'">
-              </td>
-              <td>
-                <router-link :to="{name: 'auction', params: {auctionID: auction.id}}">
-                  <div class="auctionRow"><h4>Title: </h4>{{auction.title}}
-                    <h4>Closing Time: </h4>{{new Date(auction.endDateTime).toString()}}
+        <div class="columns">
+          <div class="column is-half">
+            <h3 class="title is-1">Showing {{status}} auctions</h3>
+            <div v-for="auction in this.displayed.slice(this.index, this.index + this.numResults)" class="box">
+              <article class="media">
+                <figure class="media-left">
+                  <p class="image is-256x256">
+                    <img :src="'http://localhost:4941/api/v1/auctions/' + auction.id + '/photos'"/>
+                  </p>
+                </figure>
+                <div class="media-content ">
+                  <div class="content">
+                    <router-link :to="{name: 'auction', params: {auctionID: auction.id}}">
+                      <strong>Title: </strong>
+                      <p>{{auction.title}}</p>
+                      <strong>Starting Times:</strong>
+                      <p>{{new Date(auction.startDateTime).toString()}}</p>
+                      <strong>Closing Time: </strong>
+                      <p>{{new Date(auction.endDateTime).toString()}}</p>
+                    </router-link>
                   </div>
-                </router-link>
-              </td>
-            </tr>
-          </table>
-          <div id="pages">
-            <p>displaying {{start}}-{{index + numResults}} results of {{auctions.length}}
-              <button class="pageNav" v-on:click="indexSubtract"> <<</button>
-              <button class="pageNav" v-on:click="indexAdd"> >></button>
+                </div>
+              </article>
+            </div>
+            <div id="pages">
+              <p>displaying {{start}}-{{index + numResults}} results of {{auctions.length}}
+                <button class="pageNav" v-on:click="indexSubtract"> <<</button>
+                <button class="pageNav" v-on:click="indexAdd"> >></button>
+              </p>
+            </div>
+          </div>
+          <div id="creationWrapper">
+            <p class="buttons" v-if="user.authenticated">
+              <a class="button is-large has-icon-left is-link" @click="showCreateAuctionModal=true">
+              <span class="icon">
+                <i class="fab fa-autoprefixer"></i>
+              </span>
+                <span>Create a new Auction</span>
+              </a>
             </p>
           </div>
         </div>
-        <div id="filters">
-          <h3>Select category:</h3>
-          <select v-model="picked">
-            <option value=""></option>
-            <option v-for="category in categories" :value="category.categoryId">{{category.categoryTitle}}</option>
-          </select>
-          <button class="applyBtn" v-on:click="addCategoryParam">Apply</button>
-        </div>
       </div>
+      <create-auction-modal v-show="showCreateAuctionModal" @close="showCreateAuctionModal=false">
+      </create-auction-modal>
     </div>
   </div>
-
 </template>
 
 <script>
-    export default {
+  import auth from "../auth";
+  import CreateAuctionModal from "../components/CreateAuctionModal";
+  export default {
     name: "auctions",
+    components: {CreateAuctionModal},
     data() {
       return {
+        user: auth.user,
         error: "",
         errorFlag: false,
         parameters: "",
@@ -70,7 +98,8 @@
         categories: [],
         picked: "",
         category: "",
-        status: "all"
+        status: "all",
+        showCreateAuctionModal: false,
       }
     },
     mounted: function () {
@@ -107,15 +136,15 @@
             this.errorFlag = true;
           });
       },
-      addStatusParam: function(value) {
+      addStatusParam: function (value) {
         let regStat = RegExp("status=[a-z]*");
         let regCat = RegExp("category-id=");
-        if (value !== "") {
+        if (value !== "all") {
           if (!regCat.test(this.parameters) && !regStat.test(this.parameters)) {
             this.parameters += "?" + "status=" + value;
-          } else if (regStat.test(this.parameters)){
+          } else if (regStat.test(this.parameters)) {
             this.parameters = this.parameters.replace(regStat, "status=" + value)
-          } else if (this.parameters.length !== 0){
+          } else if (this.parameters.length !== 0) {
             this.parameters += "";
           }
         } else {
@@ -134,11 +163,11 @@
 
         this.getAuctions();
       },
-      addCategoryParam: function() {
+      addCategoryParam: function () {
         let regStat = RegExp("status=");
         let regCat = RegExp("category-id=[0-9]*");
         if (this.picked !== "") {
-          if(!regStat.test(this.parameters) && !regCat.test(this.parameters)) {
+          if (!regStat.test(this.parameters) && !regCat.test(this.parameters)) {
             this.parameters += "?" + "category-id=" + this.picked;
           } else if (regCat.test(this.parameters)) {
             this.parameters = this.parameters.replace(regCat, ("category-id=" + this.picked))
@@ -215,44 +244,13 @@
     overflow: hidden;
     background-color: lightgrey;
     border-left: 1em solid lightgrey;
-    min-height: 60em;
-    max-height: 60em;
-
   }
 
-  #filters{
-    width: 20%;
-    min-height: 55em;
-    max-height: 55em;
-    float: left;
-  }
-
-  #table {
-    width: 50%;
-    min-height: 55em;
-    display: inline-block;
-    float: left;
-  }
-
-
-  .auctionRow {
-    height: 10em;
-    width: 30em;
-    text-wrap: normal;
-  }
-
-  .auctionImage {
-    margin: 1em;
-    height: 10em;
-    width: 10em;
-    border: black solid 1px;
-  }
-
-
-  #pages{
+  #pages {
     height: 10%;
-    float: bottom;
+    margin-bottom: 1em;
   }
+
   .search {
     display: inline-block;
     margin-top: 0;
@@ -264,20 +262,14 @@
     margin-top: 1em;
   }
 
-  .navBtn {
-    margin-left: 1em;
-    color: black;
-    background-color: #66ff87;
-    border: 1px grey solid;
-    height: 2em;
-    width: 9em;
-    border-radius: 1em;
-  }
-
-  .applyBtn{
+  .applyBtn {
     height: 2em;
     background-color: #efd469;
-    border:grey 1px solid;
+    border: grey 1px solid;
+  }
+
+  #creationWrapper{
+    margin-top: 6em;
   }
 
 </style>

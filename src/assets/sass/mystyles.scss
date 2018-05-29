@@ -1,6 +1,7 @@
 @import "~bulma/sass/utilities/initial-variables";
 @import "../../../node_modules/bulma/sass/utilities/functions";
 @import "../../../node_modules/bulma/sass/utilities/derived-variables";
+//Modal attributes
 $modal-card-spacing: 40px !default
 
 $modal-card-head-background-color: $background !default
@@ -17,5 +18,9 @@ $modal-card-foot-border-top: 1px solid $border !default
 
 $modal-card-body-background-color: $white !default
 $modal-card-body-padding: 20px !default
+
+//image related
+$dimensions: 16 24 32 48 64 96 128 256 512!default
+
 
 @import "~bulma";

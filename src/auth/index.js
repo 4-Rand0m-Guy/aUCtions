@@ -16,12 +16,18 @@ export default {
       "username": credentials.username,
       "email": credentials.email,
       "password": credentials.password
-    }))
+    }), {
+      headers: {
+        "content-type": "application/json",
+        "X-Authorization": "asf"
+      }
+    })
       .then((response) => {
         localStorage.setItem('user_id', response.data.id);
         localStorage.setItem('user_token', response.data.token);
         this.user.authenticated = true;
         context.successfulLogin();
+        console.log("the token is: " + response.data.token);
       }, (error) => {
         console.log("ERROR LOGGING IN " + error.data);
         context.failedLogin(error.data);

@@ -35,6 +35,11 @@ export const router = new VueRouter({
   mode: "history"
 });
 
+router.beforeEach(function (to, from, next) {
+  window.scrollTo(0,0);
+  next();
+});
+
 new Vue({
   el: '#app',
   router: router,
@@ -43,3 +48,4 @@ new Vue({
   },
   render: h => h(App)
 });
+
