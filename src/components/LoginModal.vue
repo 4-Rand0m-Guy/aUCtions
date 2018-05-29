@@ -4,52 +4,38 @@
       <div class="modal-background"></div>
       <div class="modal-card">
         <header class="modal-card-head">
-          <p class="modal-card-title"> Register a new account </p>
-          <button class="delete" @click="$emit('close')" aria-label="close"></button>
+          <p class="modal-card-title">Login</p>
+          <button class="delete" aria-label="close" @click="$emit('close')"></button>
         </header>
         <section class="modal-card-body">
+          <div v-if="askUsername" class="field">
+            <label class="label is-3">Username</label>
+            <div class="control has-text-right">
+              <input class="input is-1 " type="text" placeholder="Please enter your username" required
+                     id="usernameField" v-model="credentials.username">
+              <a class="button is-rounded is-small is-link switchButtons " @click="switchToEmail">Use E-mail
+                instead</a>
+            </div>
+          </div>
+          <div v-else class="field">
+            <label class="label is-3">E-mail address</label>
+            <div class="control has-text-right">
+              <input class="input is-1" type="email" placeholder="Please enter you e-mail address" required
+                     pattern="^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*" id="emailField" v-model="credentials.email">
+              <a class="button is-rounded is-small is-link switchButtons" @click="switchToUsername">Use username
+                instead</a>
+            </div>
+          </div>
           <div class="field">
-            <label class="label is-3">Given Name</label>
+            <label class="label is-3">Password</label>
             <div class="control">
-              <input class="input is-1" type="text" placeholder="First name(s)" v-bind="user.name">
-            </div>
-          </div>
-          <div class="field">
-            <label class="label is-3">Family Name</label>
-            <div class="control">
-              <input class="input is-1" type="text" placeholder="Family name" v-bind="user.familyName">
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">Username</label>
-            <div class="control has-icons-left">
-              <input class="input" type="text" placeholder="Enter username" v-bind="user.username">
-              <span class="icon is-small is-left">
-                <i class="fa fa-user"></i>
-              </span>
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">E-mail Address</label>
-            <div class="control has-icons-left">
-              <input class="input" type="text" placeholder="Enter e-mail address" v-bind="user.email">
-              <span class="icon is-small is-left">
-                <i class="fas fa-envelope"></i>
-              </span>
-            </div>
-          </div>
-          <div class="field">
-            <label class="label is-3">Enter password</label>
-            <div class="control">
-              <input class="input" type="password" placeholder="" v-bind="user.password">
-            </div>
-            <div>
-              <input class="input" type="password" placeholder="confirm password" v-bind="passMatch">
+              <input class="input is-1" type="password" placeholder="Please enter your password" required
+                     id="passwordField" v-model="credentials.password">
             </div>
           </div>
         </section>
         <footer class="modal-card-foot">
-          <button class="button is-success">Register</button>
+          <button class="button is-success" @click="login">Login</button>
           <button class="button" @click="$emit('close')">Cancel</button>
         </footer>
       </div>
@@ -58,23 +44,71 @@
 </template>
 
 <script>
+  import auth from "../auth"
   export default {
     name: "loginModal",
-    data () {
+    data() {
       return {
-        user: {
-          name: "",
-          familyName: "",
-          username: "",
+        credentials: {
           email: "",
-          password: ""
+          password: "",
+          username: "",
         },
-        passMatch: ""
+        askUsername: true,
+        askEmail: false,
+      }
+    },
+    mounted: function () {
+      this.switchToUsername()
+    },
+    methods: {
+      switchToUsername: function () {
+        this.askUsername = true;
+        this.askEmail = false
+      },
+      switchToEmail: function () {
+        this.askUsername = false;
+        this.askEmail = true
+      },
+      formValid: function () {
+        let valid = true;
+        if (this.askUsername) {
+          valid = document.getElementById("usernameField").checkValidity() &&
+            document.getElementById("passwordField").checkValidity();
+        } if (this.askEmail) {
+          document.getElementById("emailField").checkValidity() &&
+          document.getElementById("passwordField").checkValidity();
+        }
+        return valid;
+      },
+      login: function () {
+        if (this.formValid()) {
+          auth.loginUser(this, this.credentials)
+        } else {
+          alert("Please enter all the login details, check red cells")
+        }
+      },
+      successfulLogin: function () {
+        this.$emit('close');
+        alert("Successfully logged in")
+      },
+      failedLogin: function (error) {
+        alert("Failed to login: " + error);
       }
     }
   }
 </script>
 
 <style scoped>
+  .switchButtons {
+    margin-top: 2px
+  }
 
+  .input:valid {
+    border: solid 1px green;
+  }
+
+  .input:invalid {
+    border: solid 1px red;
+  }
 </style>

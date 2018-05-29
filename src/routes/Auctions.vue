@@ -5,10 +5,10 @@
     </div>
     <div>
       <div>
-        <div class="nav" id="narrowing">
-          <button class="navBtn" v-on:click="addStatusParam('')">All Auctions</button>
-          <button class="navBtn" v-on:click="addStatusParam('active')">Active Auctions</button>
-          <button class="navBtn" v-on:click="addStatusParam('expired') ">Expired Auctions</button>
+        <div class="field" id="narrowing">
+          <button class="button" v-on:click="addStatusParam('')">All Auctions</button>
+          <button class="button" v-on:click="addStatusParam('active')">Active Auctions</button>
+          <button class="button" v-on:click="addStatusParam('expired') ">Expired Auctions</button>
           <form action="" class="search">
             <label>
               <input type="text" placeholder="search" v-model="searchQuery"/>
@@ -17,7 +17,7 @@
           <button class="applyBtn" v-on:click="searchAuctions">Apply</button>
         </div>
         <div id="table">
-          <h3>Showing {{status}} auctions</h3>
+          <h3 class="title is-1">Showing {{status}} auctions</h3>
           <table id="auctionList">
             <tr v-for="auction in this.displayed.slice(this.index, this.index + this.numResults)">
               <td><img class="auctionImage" :src="'http://localhost:4941/api/v1/auctions/' + auction.id + '/photos'">
@@ -126,7 +126,12 @@
             this.parameters = "";
           }
         }
-        this.status = value;
+        if (value !== "") {
+          this.status = value;
+        } else {
+          this.status = "all"
+        }
+
         this.getAuctions();
       },
       addCategoryParam: function() {

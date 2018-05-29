@@ -3,7 +3,7 @@ import App from './App';
 import Home from './routes/Home';
 import Auctions from './routes/Auctions';
 import Auction from "./routes/Auction";
-import LoginModal from "./components/LoginModal";
+import LoginModal from "./components/RegisterModal";
 import VueRouter from "vue-router";
 import VueResource from "vue-resource";
 
@@ -30,7 +30,7 @@ const routes = [
   },
 ];
 
-const router = new VueRouter({
+export const router = new VueRouter({
   routes: routes,
   mode: "history"
 });
